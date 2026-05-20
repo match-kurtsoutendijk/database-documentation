@@ -1,0 +1,236 @@
+table:
+  server: MASWD1
+  database: ProfileData
+  schema: dbo
+  name: ProPhoto
+  description: "Stores profile photos uploaded by users, including moderation status, image metadata, storage references, and display configuration. Central to the photo moderation workflow on the dating platform."
+  environment: dev
+  documented_at: 2026-05-20
+  schema_audited_at: 2026-05-20
+  schema_changes_detected: false
+  data_classification: PII
+  dlp_data_classification: restricted
+
+columns:
+  - name: UserID
+    ordinal: 1
+    data_type: int
+    nullable: false
+    default: null
+    description: "Foreign key to the Users table identifying the member who owns this photo."
+    notes: null
+    data_classification: PII
+    dsar_visibility: true
+    legal_request_visibility: true
+
+  - name: PhotoID
+    ordinal: 2
+    data_type: tinyint
+    nullable: false
+    default: null
+    description: "Sequential slot number for a user's photos (1–255 max due to tinyint). Part of the composite primary key."
+    notes: "tinyint limits each user to a maximum of 255 photos."
+    dsar_visibility: true
+    legal_request_visibility: true
+
+  - name: ApproveCode
+    ordinal: 3
+    data_type: char(1)
+    nullable: false
+    default: null
+    description: "Single-character moderation status code indicating the photo's approval state (e.g. pending, approved, rejected)."
+    notes: "Encoded value — lookup table or application constants define valid codes. No FK constraint enforces valid values."
+    dsar_visibility: false
+    legal_request_visibility: true
+
+  - name: ImageType
+    ordinal: 4
+    data_type: char(1)
+    nullable: true
+    default: null
+    description: "Single-character code representing the image format (e.g. 'J' for JPEG, 'G' for GIF)."
+    notes: "Encoded value — no FK or check constraint enforces valid values."
+    dsar_visibility: true
+    legal_request_visibility: true
+
+  - name: Height
+    ordinal: 5
+    data_type: smallint
+    nullable: true
+    default: null
+    description: "Height of the image in pixels."
+    dsar_visibility: false
+    legal_request_visibility: true
+
+  - name: Width
+    ordinal: 6
+    data_type: smallint
+    nullable: true
+    default: null
+    description: "Width of the image in pixels."
+    dsar_visibility: false
+    legal_request_visibility: true
+
+  - name: UploadDt
+    ordinal: 7
+    data_type: smalldatetime
+    nullable: true
+    default: null
+    description: "Date and time when the user uploaded the photo."
+    dsar_visibility: true
+    legal_request_visibility: true
+
+  - name: ApproveDt
+    ordinal: 8
+    data_type: smalldatetime
+    nullable: true
+    default: null
+    description: "Date and time when the photo was reviewed and its approval status last set."
+    dsar_visibility: false
+    legal_request_visibility: true
+
+  - name: ApproveBy
+    ordinal: 9
+    data_type: int
+    nullable: true
+    default: null
+    description: "User or admin ID of the moderator who last set the photo's approval status."
+    dsar_visibility: false
+    legal_request_visibility: true
+
+  - name: EditBy
+    ordinal: 10
+    data_type: int
+    nullable: true
+    default: null
+    description: "User or admin ID of the person who last edited this photo record."
+    dsar_visibility: false
+    legal_request_visibility: true
+
+  - name: StatusDt
+    ordinal: 11
+    data_type: smalldatetime
+    nullable: true
+    default: null
+    description: "Date and time of the most recent status change on this photo record."
+    dsar_visibility: false
+    legal_request_visibility: true
+
+  - name: SortOrder
+    ordinal: 12
+    data_type: tinyint
+    nullable: true
+    default: null
+    description: "Display order of this photo within the user's photo gallery. Lower values appear first."
+    dsar_visibility: true
+    legal_request_visibility: true
+
+  - name: QueuePriority
+    ordinal: 13
+    data_type: tinyint
+    nullable: true
+    default: null
+    description: "Priority weight for this photo in the moderation review queue. Higher values indicate higher priority."
+    dsar_visibility: false
+    legal_request_visibility: false
+
+  - name: PhotoImageID
+    ordinal: 14
+    data_type: uniqueidentifier
+    nullable: true
+    default: null
+    description: "GUID referencing the physical image asset in the storage system."
+    notes: "Nullable — a NULL value indicates no physical image is linked. No FK constraint to a storage manifest table is visible in the schema."
+    dsar_visibility: true
+    legal_request_visibility: true
+
+  - name: Crop
+    ordinal: 15
+    data_type: varchar(50)
+    nullable: true
+    default: null
+    description: "Crop and transform parameters applied when rendering the photo (e.g. coordinates or region descriptor)."
+    dsar_visibility: true
+    legal_request_visibility: true
+
+  - name: StorageID
+    ordinal: 16
+    data_type: tinyint
+    nullable: true
+    default: null
+    description: "Identifier for the storage backend or bucket where the physical image is housed."
+    dsar_visibility: false
+    legal_request_visibility: false
+
+  - name: CategoryID
+    ordinal: 17
+    data_type: tinyint
+    nullable: true
+    default: null
+    description: "Category classification code for the photo (e.g. profile, gallery, verification)."
+    notes: "Encoded value — no FK or check constraint enforces valid values."
+    dsar_visibility: false
+    legal_request_visibility: true
+
+constraints:
+  primary_key:
+    name: PK_proPhoto
+    columns: [UserID, PhotoID]
+    type: CLUSTERED
+  foreign_keys:
+    - name: FK_proPhoto_Users
+      column: UserID
+      references: Users.UserID
+
+indexes:
+  - name: PK_proPhoto
+    type: CLUSTERED
+    unique: true
+    columns: [UserID, PhotoID]
+    description: "Clustered primary key — optimises all per-user photo lookups and range scans by UserID."
+
+  - name: IX_proPhoto_ApproveDt_ApproveCode
+    type: NONCLUSTERED
+    unique: false
+    columns: [ApproveDt, ApproveCode]
+    description: "Supports queries filtering or sorting photos by approval date and status, likely used in moderation reporting."
+
+  - name: IX_proPhoto_PhotoImageID
+    type: NONCLUSTERED
+    unique: false
+    columns: [PhotoImageID]
+    description: "Supports lookups by storage GUID, e.g. resolving a photo asset back to its owner record."
+
+  - name: IX_proPhoto_StatusDt
+    type: NONCLUSTERED
+    unique: true
+    columns: [ApproveCode, EditBy, UserID, PhotoID, StatusDt, QueuePriority]
+    description: "Unique covering index for the moderation queue — supports dequeue operations filtered by ApproveCode and ordered by StatusDt, with included columns to avoid key lookups."
+
+  - name: IX_prophoto_StatusDt_ApproveCode
+    type: NONCLUSTERED
+    unique: false
+    columns: [ApproveCode, UserID, PhotoID, ApproveBy, PhotoImageID, StatusDt]
+    description: "Covering index for approval workflow queries filtered by ApproveCode, returning approver and image asset details without a key lookup."
+
+  - name: IX_proPhoto_StorageID
+    type: NONCLUSTERED
+    unique: false
+    columns: [UserID, PhotoID, UploadDt, PhotoImageID, Crop, StorageID, ApproveCode]
+    description: "Covering index likely used by storage migration or CDN re-processing jobs that filter by StorageID."
+
+  - name: IX_proPhoto_UploadDt
+    type: NONCLUSTERED
+    unique: false
+    columns: [UploadDt]
+    description: "Supports time-range queries on upload date, e.g. recently uploaded photos reports."
+
+governance:
+  pii_columns: [UserID, PhotoID, UploadDt, PhotoImageID, Crop, SortOrder]
+  sensitive_columns: []
+  open_questions:
+    - "ApproveCode, ImageType, and CategoryID are single-character encoded values with no FK or CHECK constraint — consider adding a reference table or constraint to prevent invalid codes from entering the system."
+    - "PhotoImageID is nullable — clarify whether a NULL value is a valid in-progress state or an error condition; an orphaned row with no linked asset could cause rendering failures."
+    - "IX_proPhoto_StatusDt and IX_prophoto_StatusDt_ApproveCode have overlapping column sets and similar intent — review whether both indexes are needed or if one is redundant."
+    - "ApproveBy and EditBy are plain int columns with no FK constraint to a Users or Admins table — referential integrity is not enforced at the database level."
+    - "tinyint for PhotoID caps each user at 255 photos — confirm this limit is intentional and sufficient for current and projected usage."
