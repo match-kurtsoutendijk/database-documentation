@@ -7,7 +7,7 @@ table:
   environment: dev
   documented_at: 2026-05-20
   schema_audited_at: 2026-05-20
-  schema_changes_detected: pending
+  schema_changes_detected: true
   data_classification: PII
   dlp_data_classification: restricted
 
@@ -241,15 +241,6 @@ columns:
     dsar_visibility: true
     legal_request_visibility: true
 
-  - name: testfield
-    ordinal: 25
-    data_type: varchar(100)
-    nullable: true
-    default: null
-    description: General-purpose test/scratch field. Purpose unclear â€” should be reviewed for removal or formal definition before production use.
-    notes: "Added 2026-05-20. No apparent business purpose based on name alone â€” confirm with schema owner."
-    dsar_visibility: false
-    legal_request_visibility: false
 
 constraints:
   primary_key:
@@ -317,4 +308,5 @@ governance:
     - "GenderGenderSeek is a composite-encoded column; decode logic and lookup table reference should be documented."
     - "No foreign key constraints defined â€” referential integrity for BrandID, RevenueID, BannerID, CountryCode, StateCode, CityCode relies on application-level enforcement."
     - "Handle uniqueness is not enforced at the database level; application must ensure no duplicate handles per brand/site."
+
 
