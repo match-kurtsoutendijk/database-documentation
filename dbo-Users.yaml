@@ -7,7 +7,7 @@ table:
   environment: dev
   documented_at: 2026-05-20
   schema_audited_at: 2026-05-20
-  schema_changes_detected: pending
+  schema_changes_detected: true
   data_classification: PII
 
 columns:
@@ -191,6 +191,14 @@ columns:
     nullable: true
     default: "CONVERT(smalldatetime, getdate())"
     description: Date and time of the user's most recent login on their specific sub-site. Defaults to the time of record creation.
+
+  - name: testfield
+    ordinal: 25
+    data_type: varchar(100)
+    nullable: true
+    default: null
+    description: General-purpose test/scratch field. Purpose unclear â€” should be reviewed for removal or formal definition before production use.
+    notes: "Added 2026-05-20. No apparent business purpose based on name alone â€” confirm with schema owner."
 
 constraints:
   primary_key:
