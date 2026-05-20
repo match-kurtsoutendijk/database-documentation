@@ -1,0 +1,259 @@
+table:
+  server: MASWD1
+  database: ProfileData
+  schema: dbo
+  name: Users
+  description: Core user account table for the online dating platform. Stores authentication credentials, demographic data, geographic location, and acquisition/attribution metadata for every registered member.
+  environment: dev
+  documented_at: 2026-05-20
+  schema_audited_at: 2026-05-20
+  data_classification: PII
+
+columns:
+  - name: UserID
+    ordinal: 1
+    data_type: int
+    nullable: false
+    default: null
+    description: Surrogate primary key uniquely identifying each registered user.
+    notes: Identity column (clustered PK). Used as the foreign key target across the platform schema.
+
+  - name: Handle
+    ordinal: 2
+    data_type: nvarchar(60)
+    nullable: false
+    default: null
+    description: User-chosen public display name (username/alias) shown to other members.
+    notes: Unicode-safe; supports international characters. Should be unique per brand/site.
+
+  - name: Password
+    ordinal: 3
+    data_type: nvarchar(32)
+    nullable: false
+    default: null
+    description: Stored user password credential.
+    notes: "Data governance concern: 32-char max suggests plain-text or weakly-hashed storage. Recommend review against security policy."
+    data_classification: sensitive
+
+  - name: GenderGenderSeek
+    ordinal: 4
+    data_type: tinyint
+    nullable: false
+    default: null
+    description: Encoded composite value representing the user's gender and the gender(s) they are seeking. Lookup table reference likely required to decode.
+    notes: Packing two attributes into one column; a lookup/reference table should define valid bitmask or enum values.
+
+  - name: GeoTypeID
+    ordinal: 5
+    data_type: tinyint
+    nullable: false
+    default: null
+    description: Indicates the granularity of the geographic location provided by the user (e.g., city, postal code, region).
+
+  - name: CountryCode
+    ordinal: 6
+    data_type: smallint
+    nullable: true
+    default: null
+    description: Numeric country identifier for the user's location. Likely maps to a reference table of countries.
+
+  - name: StateCode
+    ordinal: 7
+    data_type: tinyint
+    nullable: true
+    default: null
+    description: Numeric state or province code within the user's country.
+
+  - name: CityCode
+    ordinal: 8
+    data_type: int
+    nullable: true
+    default: null
+    description: Numeric city identifier for the user's location. References a city lookup table.
+
+  - name: PostalCode
+    ordinal: 9
+    data_type: varchar(25)
+    nullable: true
+    default: null
+    description: User's postal/ZIP code. Stored as a string to accommodate international formats.
+    data_classification: PII
+
+  - name: SignupDt
+    ordinal: 10
+    data_type: smalldatetime
+    nullable: false
+    default: null
+    description: Date and time the user completed registration.
+    notes: Precision is minute-level (smalldatetime). Used in several acquisition indexes.
+
+  - name: LoginDt
+    ordinal: 11
+    data_type: smalldatetime
+    nullable: false
+    default: null
+    description: Date and time of the user's most recent login. Used for activity/engagement tracking.
+
+  - name: Birthday
+    ordinal: 12
+    data_type: datetime
+    nullable: false
+    default: null
+    description: User's date of birth. Used for age calculation, age-gate enforcement, and matching criteria.
+    data_classification: PII
+    notes: Full datetime precision stored; only the date portion is meaningful.
+
+  - name: UrlCode
+    ordinal: 13
+    data_type: smallint
+    nullable: false
+    default: null
+    description: Code identifying the referring URL or traffic source that brought the user to the site.
+
+  - name: BrandID
+    ordinal: 14
+    data_type: int
+    nullable: false
+    default: null
+    description: Identifier of the brand (white-label site) under which the user registered. Supports multi-brand platform architecture.
+
+  - name: PromoID
+    ordinal: 15
+    data_type: char(10)
+    nullable: false
+    default: null
+    description: Promotional or campaign code associated with the user's acquisition. Used for marketing attribution.
+
+  - name: RevenueID
+    ordinal: 16
+    data_type: int
+    nullable: false
+    default: null
+    description: Identifier linking the user to a revenue or subscription tier record.
+
+  - name: BannerID
+    ordinal: 17
+    data_type: int
+    nullable: false
+    default: null
+    description: Identifier of the advertising banner or creative that drove the user's registration.
+
+  - name: LoginDisabled
+    ordinal: 18
+    data_type: tinyint
+    nullable: false
+    default: null
+    description: Flag indicating whether the user's login access is currently suspended (1 = disabled, 0 = active).
+
+  - name: FirstName
+    ordinal: 19
+    data_type: varchar(50)
+    nullable: true
+    default: null
+    description: User's first (given) name.
+    data_classification: PII
+
+  - name: MiddleName
+    ordinal: 20
+    data_type: varchar(50)
+    nullable: true
+    default: null
+    description: User's middle name.
+    data_classification: PII
+
+  - name: LastName
+    ordinal: 21
+    data_type: varchar(50)
+    nullable: true
+    default: null
+    description: User's last (family) name.
+    data_classification: PII
+
+  - name: TestingGuid
+    ordinal: 22
+    data_type: uniqueidentifier
+    nullable: false
+    default: newid()
+    description: Auto-generated GUID, likely used for A/B testing cohort assignment or test-user identification.
+    notes: Default of newid() means every row gets a unique value automatically.
+
+  - name: SiteCode
+    ordinal: 23
+    data_type: smallint
+    nullable: true
+    default: 1
+    description: Identifies the specific sub-site or microsite the user belongs to within the brand. Defaults to site 1.
+
+  - name: SiteLoginDt
+    ordinal: 24
+    data_type: smalldatetime
+    nullable: true
+    default: "CONVERT(smalldatetime, getdate())"
+    description: Date and time of the user's most recent login on their specific sub-site. Defaults to the time of record creation.
+
+constraints:
+  primary_key:
+    name: PK_Users
+    columns: [UserID]
+    type: CLUSTERED
+
+  foreign_keys: []
+
+indexes:
+  - name: PK_Users
+    type: CLUSTERED
+    unique: true
+    columns: [UserID]
+
+  - name: IX_BrandID_RevenueID_SignupDt_UserID
+    type: NONCLUSTERED
+    unique: false
+    columns: [BrandID, RevenueID, SignupDt, UserID]
+    description: Supports acquisition and revenue reporting queries filtered by brand and revenue tier over time.
+
+  - name: IX_RevenueID
+    type: NONCLUSTERED
+    unique: false
+    columns: [SignupDt, PostalCode, CountryCode, BrandID, RevenueID]
+    description: Composite index supporting geographic and brand-level revenue reporting segmented by signup date.
+
+  - name: IX_Users_Geo
+    type: NONCLUSTERED
+    unique: false
+    columns: [CountryCode, StateCode, CityCode]
+    description: Supports geographic filtering and proximity-based matching queries.
+
+  - name: IX_Users_Login
+    type: NONCLUSTERED
+    unique: false
+    columns: [LoginDt]
+    description: Supports activity-based queries such as recently active users or churn analysis.
+
+  - name: IX_Users_Name
+    type: NONCLUSTERED
+    unique: false
+    columns: [LastName, FirstName]
+    description: Supports name-based search and lookup by customer service or admin tools.
+
+  - name: IX_Users_SignupDt
+    type: NONCLUSTERED
+    unique: false
+    columns: [SignupDt]
+    description: Supports cohort analysis and registration trend reporting by date.
+
+governance:
+  pii_columns:
+    - Handle
+    - Password
+    - PostalCode
+    - Birthday
+    - FirstName
+    - MiddleName
+    - LastName
+  sensitive_columns:
+    - Password
+  open_questions:
+    - "Password column (nvarchar 32) may store plain-text or insufficiently hashed credentials â€” security review recommended."
+    - "GenderGenderSeek is a composite-encoded column; decode logic and lookup table reference should be documented."
+    - "No foreign key constraints defined â€” referential integrity for BrandID, RevenueID, BannerID, CountryCode, StateCode, CityCode relies on application-level enforcement."
+    - "Handle uniqueness is not enforced at the database level; application must ensure no duplicate handles per brand/site."
