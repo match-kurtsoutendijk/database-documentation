@@ -7,8 +7,9 @@ table:
   environment: dev
   documented_at: 2026-05-20
   schema_audited_at: 2026-05-20
-  schema_changes_detected: true
+  schema_changes_detected: pending
   data_classification: PII
+  dlp_data_classification: restricted
 
 columns:
   - name: UserID
@@ -18,6 +19,8 @@ columns:
     default: null
     description: Surrogate primary key uniquely identifying each registered user.
     notes: Identity column (clustered PK). Used as the foreign key target across the platform schema.
+    dsar_visibility: false
+    legal_request_visibility: true
 
   - name: Handle
     ordinal: 2
@@ -26,6 +29,8 @@ columns:
     default: null
     description: User-chosen public display name (username/alias) shown to other members.
     notes: Unicode-safe; supports international characters. Should be unique per brand/site.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: Password
     ordinal: 3
@@ -35,6 +40,8 @@ columns:
     description: Stored user password credential.
     notes: "Data governance concern: 32-char max suggests plain-text or weakly-hashed storage. Recommend review against security policy."
     data_classification: sensitive
+    dsar_visibility: false
+    legal_request_visibility: false
 
   - name: GenderGenderSeek
     ordinal: 4
@@ -43,6 +50,8 @@ columns:
     default: null
     description: Encoded composite value representing the user's gender and the gender(s) they are seeking. Lookup table reference likely required to decode.
     notes: Packing two attributes into one column; a lookup/reference table should define valid bitmask or enum values.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: GeoTypeID
     ordinal: 5
@@ -50,6 +59,8 @@ columns:
     nullable: false
     default: null
     description: Indicates the granularity of the geographic location provided by the user (e.g., city, postal code, region).
+    dsar_visibility: false
+    legal_request_visibility: true
 
   - name: CountryCode
     ordinal: 6
@@ -57,6 +68,8 @@ columns:
     nullable: true
     default: null
     description: Numeric country identifier for the user's location. Likely maps to a reference table of countries.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: StateCode
     ordinal: 7
@@ -64,6 +77,8 @@ columns:
     nullable: true
     default: null
     description: Numeric state or province code within the user's country.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: CityCode
     ordinal: 8
@@ -71,6 +86,8 @@ columns:
     nullable: true
     default: null
     description: Numeric city identifier for the user's location. References a city lookup table.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: PostalCode
     ordinal: 9
@@ -79,6 +96,8 @@ columns:
     default: null
     description: User's postal/ZIP code. Stored as a string to accommodate international formats.
     data_classification: PII
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: SignupDt
     ordinal: 10
@@ -87,6 +106,8 @@ columns:
     default: null
     description: Date and time the user completed registration.
     notes: Precision is minute-level (smalldatetime). Used in several acquisition indexes.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: LoginDt
     ordinal: 11
@@ -94,6 +115,8 @@ columns:
     nullable: false
     default: null
     description: Date and time of the user's most recent login. Used for activity/engagement tracking.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: Birthday
     ordinal: 12
@@ -103,6 +126,8 @@ columns:
     description: User's date of birth. Used for age calculation, age-gate enforcement, and matching criteria.
     data_classification: PII
     notes: Full datetime precision stored; only the date portion is meaningful.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: UrlCode
     ordinal: 13
@@ -110,6 +135,8 @@ columns:
     nullable: false
     default: null
     description: Code identifying the referring URL or traffic source that brought the user to the site.
+    dsar_visibility: false
+    legal_request_visibility: true
 
   - name: BrandID
     ordinal: 14
@@ -117,6 +144,8 @@ columns:
     nullable: false
     default: null
     description: Identifier of the brand (white-label site) under which the user registered. Supports multi-brand platform architecture.
+    dsar_visibility: false
+    legal_request_visibility: true
 
   - name: PromoID
     ordinal: 15
@@ -124,6 +153,8 @@ columns:
     nullable: false
     default: null
     description: Promotional or campaign code associated with the user's acquisition. Used for marketing attribution.
+    dsar_visibility: false
+    legal_request_visibility: true
 
   - name: RevenueID
     ordinal: 16
@@ -131,6 +162,8 @@ columns:
     nullable: false
     default: null
     description: Identifier linking the user to a revenue or subscription tier record.
+    dsar_visibility: false
+    legal_request_visibility: true
 
   - name: BannerID
     ordinal: 17
@@ -138,6 +171,8 @@ columns:
     nullable: false
     default: null
     description: Identifier of the advertising banner or creative that drove the user's registration.
+    dsar_visibility: false
+    legal_request_visibility: true
 
   - name: LoginDisabled
     ordinal: 18
@@ -145,6 +180,8 @@ columns:
     nullable: false
     default: null
     description: Flag indicating whether the user's login access is currently suspended (1 = disabled, 0 = active).
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: FirstName
     ordinal: 19
@@ -153,6 +190,8 @@ columns:
     default: null
     description: User's first (given) name.
     data_classification: PII
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: MiddleName
     ordinal: 20
@@ -161,6 +200,8 @@ columns:
     default: null
     description: User's middle name.
     data_classification: PII
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: LastName
     ordinal: 21
@@ -169,6 +210,8 @@ columns:
     default: null
     description: User's last (family) name.
     data_classification: PII
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: TestingGuid
     ordinal: 22
@@ -177,6 +220,8 @@ columns:
     default: newid()
     description: Auto-generated GUID, likely used for A/B testing cohort assignment or test-user identification.
     notes: Default of newid() means every row gets a unique value automatically.
+    dsar_visibility: false
+    legal_request_visibility: false
 
   - name: SiteCode
     ordinal: 23
@@ -184,6 +229,8 @@ columns:
     nullable: true
     default: 1
     description: Identifies the specific sub-site or microsite the user belongs to within the brand. Defaults to site 1.
+    dsar_visibility: false
+    legal_request_visibility: true
 
   - name: SiteLoginDt
     ordinal: 24
@@ -191,6 +238,8 @@ columns:
     nullable: true
     default: "CONVERT(smalldatetime, getdate())"
     description: Date and time of the user's most recent login on their specific sub-site. Defaults to the time of record creation.
+    dsar_visibility: true
+    legal_request_visibility: true
 
   - name: testfield
     ordinal: 25
@@ -199,6 +248,8 @@ columns:
     default: null
     description: General-purpose test/scratch field. Purpose unclear â€” should be reviewed for removal or formal definition before production use.
     notes: "Added 2026-05-20. No apparent business purpose based on name alone â€” confirm with schema owner."
+    dsar_visibility: false
+    legal_request_visibility: false
 
 constraints:
   primary_key:
