@@ -7,7 +7,7 @@ table:
   environment: dev
   documented_at: 2026-05-20
   schema_audited_at: 2026-05-20
-  schema_changes_detected: true
+  schema_changes_detected: pending
   data_classification: PII
   dlp_data_classification: restricted
 
@@ -317,3 +317,4 @@ governance:
     - "GenderGenderSeek is a composite-encoded column; decode logic and lookup table reference should be documented."
     - "No foreign key constraints defined â€” referential integrity for BrandID, RevenueID, BannerID, CountryCode, StateCode, CityCode relies on application-level enforcement."
     - "Handle uniqueness is not enforced at the database level; application must ensure no duplicate handles per brand/site."
+
